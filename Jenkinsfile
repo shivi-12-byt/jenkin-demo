@@ -2,23 +2,36 @@
 pipeline {
     agent any
 
+    environment {
+        WEB_HOST = '16.16.24.40'
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                echo 'Code is available in Jenkins workspace'
+                checkout scm
             }
         }
 
         stage('Validate') {
             steps {
                 sh 'test -s index.html'
-                echo 'Website file validation successful!'
+                echo 'Validation successful'
             }
         }
 
         stage('Deploy') {
             steps {
-                echo 'Next we will configure deployment to the EC2 web server'
+                sshagent(credentials: ['web-deploy-key']) {
+                    sh '''
+                        set -eu
+
+                        scp index.html ubuntu@$WEB_HOST:/tmp/index.html
+
+                        ssh ubuntu@$WEB_HOST \
+                          'sudo install -o root -g root -m 644 /tmp/index.html /var/www/html/index.html && rm -f /tmp/index.html'
+                    '''
+                }
             }
         }
     }
