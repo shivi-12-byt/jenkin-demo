@@ -1,5 +1,7 @@
 pipeline {
-    agent any
+    agent { 
+        label 'webserver'
+    }
 
     stages {
         stage('Pull') {
